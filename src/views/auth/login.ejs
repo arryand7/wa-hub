@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — WA Hub Sabira</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 500: '#25a06e', 600: '#1a7d55', 700: '#166545' },
+            dark: { 700: '#3e4047', 800: '#2d2f34', 900: '#1e1f23', 950: '#121316' }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    body { background: #0f1117; }
+    .glass-card {
+      background: rgba(30, 31, 35, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .bg-grid {
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+    .float { animation: float 6s ease-in-out infinite; }
+  </style>
+</head>
+<body class="h-full bg-grid flex items-center justify-center p-4">
+
+  <!-- Background decoration -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none">
+    <div class="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-brand-500/5 blur-3xl float"></div>
+    <div class="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-brand-600/5 blur-3xl float" style="animation-delay: -3s;"></div>
+  </div>
+
+  <div class="relative w-full max-w-md">
+    <!-- Logo -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 mb-4 shadow-lg shadow-brand-500/20">
+        <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-white tracking-tight">WA Hub Sabira</h1>
+      <p class="text-sm text-gray-500 mt-1">Central WhatsApp Bot Hub</p>
+    </div>
+
+    <!-- Flash messages -->
+    <% if (typeof flash_error !== 'undefined' && flash_error && flash_error.length > 0) { %>
+      <div class="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm text-center">
+        <%= flash_error[0] %>
+      </div>
+    <% } %>
+
+    <!-- Login Card -->
+    <div class="glass-card rounded-2xl p-8">
+      <h2 class="text-lg font-semibold text-white mb-1">Masuk ke Dashboard</h2>
+      <p class="text-sm text-gray-500 mb-6">Gunakan akun admin untuk melanjutkan</p>
+
+      <form action="/auth/login" method="POST" class="space-y-5">
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1.5">Username</label>
+          <input type="text" name="username" required autofocus
+                 class="w-full px-4 py-3 rounded-xl bg-dark-900 border border-dark-700 text-white text-sm placeholder-gray-600
+                        focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
+                 placeholder="Masukkan username">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1.5">Password</label>
+          <input type="password" name="password" required
+                 class="w-full px-4 py-3 rounded-xl bg-dark-900 border border-dark-700 text-white text-sm placeholder-gray-600
+                        focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
+                 placeholder="Masukkan password">
+        </div>
+        <button type="submit"
+                class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 text-white text-sm font-semibold
+                       hover:from-brand-500 hover:to-brand-400 transition-all shadow-lg shadow-brand-500/20
+                       active:scale-[0.98]">
+          Masuk
+        </button>
+      </form>
+    </div>
+
+    <p class="text-center text-xs text-gray-600 mt-6">
+      &copy; <%= new Date().getFullYear() %> WA Hub Sabira
+    </p>
+  </div>
+</body>
+</html>

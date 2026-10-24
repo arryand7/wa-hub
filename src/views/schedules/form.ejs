@@ -1,0 +1,90 @@
+<!-- Schedule Create/Edit Form -->
+<div class="max-w-2xl mx-auto space-y-6 fade-in">
+  <div>
+    <a href="/schedules" class="text-sm text-dark-400 hover:text-brand-400 transition-colors">← Kembali ke Daftar Jadwal</a>
+  </div>
+
+  <div class="glass-card rounded-2xl p-6">
+    <h3 class="text-lg font-semibold text-white mb-6"><%= schedule ? 'Edit' : 'Buat' %> Jadwal</h3>
+
+    <form action="<%= schedule ? '/schedules/' + schedule.id : '/schedules' %>" method="POST" class="space-y-5">
+
+      <div>
+        <label class="block text-xs font-medium text-dark-300 mb-1.5">Perintah / Action</label>
+        <select name="command_id" required
+                class="w-full px-4 py-3 rounded-xl bg-dark-900 border border-dark-700 text-white text-sm
+                       focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all">
+          <option value="">Pilih Perintah</option>
+          <% commands.forEach(cmd => { %>
+            <option value="<%= cmd.id %>" <%= schedule && schedule.commandId === cmd.id ? 'selected' : '' %>>
+              <%= cmd.triggerCommand %> — <%= cmd.app.name %>
+            </option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-dark-300 mb-1.5">Cron Expression</label>
+        <input type="text" name="cron_expression" required
+               value="<%= schedule ? schedule.cronExpression : '' %>"
+               class="w-full px-4 py-3 rounded-xl bg-dark-900 border border-dark-700 text-white text-sm font-mono placeholder-dark-500
+                      focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
+               placeholder="0 23 * * *">
+        <div class="mt-2 text-xs text-dark-500 space-y-1">
+          <p>Format: <code class="text-dark-300">menit jam hari-bulan bulan hari-minggu</code></p>
+          <div class="flex flex-wrap gap-2 mt-1.5">
+            <span class="px-2 py-0.5 rounded bg-dark-800 text-dark-400 cursor-pointer hover:text-brand-400 transition-colors"
+                  onclick="document.querySelector('[name=cron_expression]').value='0 23 * * *'">23:00 WIB</span>
+            <span class="px-2 py-0.5 rounded bg-dark-800 text-dark-400 cursor-pointer hover:text-brand-400 transition-colors"
+                  onclick="document.querySelector('[name=cron_expression]').value='0 7 * * 1-5'">07:00 Senin-Jumat</span>
+            <span class="px-2 py-0.5 rounded bg-dark-800 text-dark-400 cursor-pointer hover:text-brand-400 transition-colors"
+                  onclick="document.querySelector('[name=cron_expression]').value='0 8 * * 1'">08:00 Senin</span>
+            <span class="px-2 py-0.5 rounded bg-dark-800 text-dark-400 cursor-pointer hover:text-brand-400 transition-colors"
+                  onclick="document.querySelector('[name=cron_expression]').value='0 */6 * * *'">Setiap 6 jam</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-dark-300 mb-1.5">Grup WA Tujuan</label>
+        <select name="target_group_id" required
+                class="w-full px-4 py-3 rounded-xl bg-dark-900 border border-dark-700 text-white text-sm
+                       focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all">
+          <option value="">Pilih Grup Tujuan</option>
+          <% groups.forEach(g => { %>
+            <option value="<%= g.id %>" <%= schedule && schedule.targetGroupId === g.id ? 'selected' : '' %>>
+              <%= g.name %>
+            </option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-dark-300 mb-1.5">Parameter Tambahan (JSON, Opsional)</label>
+        <textarea name="extra_params" rows="3"
+                  class="w-full px-4 py-3 rounded-xl bg-dark-900 border border-dark-700 text-white text-sm font-mono placeholder-dark-500
+                         focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
+                  placeholder='{"tanggal": "hari_ini"}'><%= schedule && schedule.extraParams ? schedule.extraParams : '' %></textarea>
+      </div>
+
+      <div class="flex items-center gap-3 py-2">
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" name="is_active" class="sr-only peer"
+                 <%= schedule ? (schedule.isActive ? 'checked' : '') : 'checked' %>>
+          <div class="w-9 h-5 bg-dark-700 rounded-full peer peer-checked:bg-brand-500 peer-focus:ring-2 peer-focus:ring-brand-500/30 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+        </label>
+        <span class="text-sm text-dark-300">Aktif</span>
+      </div>
+
+      <div class="flex gap-3 pt-2">
+        <button type="submit"
+                class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 text-white text-sm font-medium hover:from-brand-500 hover:to-brand-400 transition-all shadow-lg shadow-brand-500/20">
+          <%= schedule ? 'Simpan Perubahan' : 'Buat Jadwal' %>
+        </button>
+        <a href="/schedules" class="px-6 py-2.5 rounded-xl bg-dark-700 text-dark-300 text-sm font-medium hover:bg-dark-600 hover:text-white transition-all">
+          Batal
+        </a>
+      </div>
+    </form>
+  </div>
+</div>

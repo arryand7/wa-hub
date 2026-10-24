@@ -1,0 +1,141 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// ─── Admin Account ───────────────────────────────────────────
+model Admin {
+  id            Int      @id @default(autoincrement())
+  username      String   @unique
+  passwordHash  String   @map("password_hash")
+  displayName   String   @map("display_name")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("admins")
+}
+
+// ─── External App Registration ───────────────────────────────
+model App {
+  id            Int       @id @default(autoincrement())
+  name          String
+  slug          String    @unique
+  baseUrl       String    @map("base_url")
+  secretKey     String    @map("secret_key")
+  manifestJson  String?   @map("manifest_json") // JSON string
+  lastSyncedAt  DateTime? @map("last_synced_at")
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  commands Command[]
+
+  @@map("apps")
+}
+
+// ─── WhatsApp Groups (synced from Baileys) ───────────────────
+model WaGroup {
+  id        Int      @id @default(autoincrement())
+  jid       String   @unique
+  name      String
+  syncedAt  DateTime @default(now()) @map("synced_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  commandGroups CommandGroup[]
+  schedules     Schedule[]
+
+  @@map("wa_groups")
+}
+
+// ─── Bot Command Definition ─────────────────────────────────
+model Command {
+  id              Int      @id @default(autoincrement())
+  appId           Int      @map("app_id")
+  triggerCommand  String   @unique @map("trigger_command")
+  actionId        String   @map("action_id")
+  argMapping      String?  @map("arg_mapping") // JSON string: [{ "position": 1, "paramName": "nama_siswa" }]
+  messageTemplate String   @map("message_template")
+  description     String?
+  allGroups       Boolean  @default(true) @map("all_groups")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  app           App            @relation(fields: [appId], references: [id], onDelete: Cascade)
+  commandGroups CommandGroup[]
+  schedules     Schedule[]
+  messageLogs   MessageLog[]
+
+  @@map("commands")
+}
+
+// ─── Junction: Command ↔ WaGroup (Access Filter) ────────────
+model CommandGroup {
+  id        Int @id @default(autoincrement())
+  commandId Int @map("command_id")
+  waGroupId Int @map("wa_group_id")
+
+  command Command @relation(fields: [commandId], references: [id], onDelete: Cascade)
+  waGroup WaGroup @relation(fields: [waGroupId], references: [id], onDelete: Cascade)
+
+  @@unique([commandId, waGroupId])
+  @@map("command_groups")
+}
+
+// ─── Scheduled Job ───────────────────────────────────────────
+model Schedule {
+  id             Int       @id @default(autoincrement())
+  commandId      Int       @map("command_id")
+  cronExpression String    @map("cron_expression")
+  targetGroupId  Int       @map("target_group_id")
+  extraParams    String?   @map("extra_params") // JSON string
+  isActive       Boolean   @default(true) @map("is_active")
+  lastRunAt      DateTime? @map("last_run_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  command     Command     @relation(fields: [commandId], references: [id], onDelete: Cascade)
+  targetGroup WaGroup     @relation(fields: [targetGroupId], references: [id], onDelete: Cascade)
+  messageLogs MessageLog[]
+
+  @@map("schedules")
+}
+
+// ─── API Keys for Gateway ────────────────────────────────────
+model ApiKey {
+  id        Int      @id @default(autoincrement())
+  keyValue  String   @unique @map("key_value") // plain-text for simplicity; hash in production
+  label     String
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("api_keys")
+}
+
+// ─── Message Log ─────────────────────────────────────────────
+model MessageLog {
+  id             Int      @id @default(autoincrement())
+  direction      String   // incoming | outgoing | scheduled | gateway
+  waJid          String?  @map("wa_jid")
+  groupName      String?  @map("group_name")
+  commandTrigger String?  @map("command_trigger")
+  requestBody    String?  @map("request_body")  // JSON string
+  responseBody   String?  @map("response_body") // JSON string
+  status         String   @default("success")   // success | error
+  errorMessage   String?  @map("error_message")
+  scheduleId     Int?     @map("schedule_id")
+  commandId      Int?     @map("command_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  schedule Schedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+  command  Command?  @relation(fields: [commandId], references: [id], onDelete: SetNull)
+
+  @@map("message_logs")
+}

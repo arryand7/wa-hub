@@ -1,0 +1,213 @@
+<!-- Command Create/Edit Form - Builder with Variable Badges -->
+<div class="max-w-3xl mx-auto space-y-6 fade-in" x-data="commandBuilder()">
+  <div>
+    <a href="/commands" class="text-sm text-dark-400 hover:text-brand-400 transition-colors">← Kembali ke Daftar Perintah</a>
+  </div>
+
+  <div class="glass-card rounded-2xl p-6">
+    <h3 class="text-lg font-semibold text-white mb-6"><%= command ? 'Edit' : 'Buat' %> Perintah Bot</h3>
+
+    <form action="<%= command ? '/commands/' + command.id : '/commands' %>" method="POST" class="space-y-5">
+
+      <!-- App & Action Selection -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-dark-300 mb-1.5">Aplikasi</label>
+          <select name="app_id" required x-model="selectedAppId" @change="loadManifest()"
+                  class="w-full px-4 py-3 rounded-xl bg-dark-900 border border-dark-700 text-white text-sm
+                         focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all">
+            <option value="">Pilih Aplikasi</option>
+            <% apps.forEach(app => { %>
+              <option value="<%= app.id %>"
+                data-manifest='<%= app.manifestJson || "null" %>'
+                <%= command && command.appId === app.id ? 'selected' : '' %>
+              ><%= app.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-dark-300 mb-1.5">Action</label>
+          <select name="action_id" required x-model="selectedActionId" @change="onActionChange()"
+                  class="w-full px-4 py-3 rounded-xl bg-dark-900 border border-dark-700 text-white text-sm
+                         focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all">
+            <option value="">Pilih Action</option>
+            <template x-for="action in actions" :key="action.id">
+              <option :value="action.id" x-text="action.name" :selected="action.id === selectedActionId"></option>
+            </template>
+          </select>
+        </div>
+      </div>
+
+      <!-- Action description -->
+      <div x-show="selectedAction" x-transition class="px-4 py-3 rounded-xl bg-dark-800 border border-dark-700">
+        <p class="text-xs text-dark-400" x-text="selectedAction?.description"></p>
+        <div x-show="selectedAction?.parameters?.length > 0" class="mt-2">
+          <p class="text-xs text-dark-500 mb-1">Parameter yang dibutuhkan:</p>
+          <div class="flex flex-wrap gap-1.5">
+            <template x-for="p in selectedAction?.parameters || []" :key="p.name">
+              <span class="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 text-[10px] font-mono" x-text="p.name + (p.required ? ' *' : '')"></span>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trigger Command -->
+      <div>
+        <label class="block text-xs font-medium text-dark-300 mb-1.5">Trigger Command</label>
+        <input type="text" name="trigger_command" required
+               value="<%= command ? command.triggerCommand : '' %>"
+               class="w-full px-4 py-3 rounded-xl bg-dark-900 border border-dark-700 text-white text-sm font-mono placeholder-dark-500
+                      focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
+               placeholder="/laporan-laptop">
+        <p class="text-xs text-dark-500 mt-1">Kata kunci yang akan digunakan di chat WA. Contoh: <code class="text-dark-300">/cek-laptop [nama_siswa]</code></p>
+      </div>
+
+      <!-- Arg Mapping (JSON) -->
+      <div>
+        <label class="block text-xs font-medium text-dark-300 mb-1.5">Pemetaan Argumen (JSON)</label>
+        <textarea name="arg_mapping" rows="3"
+                  class="w-full px-4 py-3 rounded-xl bg-dark-900 border border-dark-700 text-white text-sm font-mono placeholder-dark-500
+                         focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
+                  placeholder='[{"position": 1, "paramName": "nama_siswa"}]'><%= command && command.argMapping ? command.argMapping : '' %></textarea>
+        <p class="text-xs text-dark-500 mt-1">Peta argumen chat ke parameter API. <code class="text-dark-300">position</code> = urutan kata setelah command (mulai 1)</p>
+      </div>
+
+      <!-- Deskripsi -->
+      <div>
+        <label class="block text-xs font-medium text-dark-300 mb-1.5">Deskripsi</label>
+        <input type="text" name="description" value="<%= command ? (command.description || '') : '' %>"
+               class="w-full px-4 py-3 rounded-xl bg-dark-900 border border-dark-700 text-white text-sm placeholder-dark-500
+                      focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
+               placeholder="Deskripsi singkat perintah ini">
+      </div>
+
+      <!-- Message Template -->
+      <div>
+        <label class="block text-xs font-medium text-dark-300 mb-1.5">Template Pesan</label>
+
+        <!-- Variable badges -->
+        <div x-show="variables.length > 0" x-transition class="mb-2">
+          <p class="text-[10px] text-dark-500 mb-1.5 uppercase tracking-wider font-semibold">Klik untuk menyisipkan variabel:</p>
+          <div class="flex flex-wrap gap-1.5">
+            <template x-for="v in variables" :key="v">
+              <button type="button" @click="insertVariable(v)"
+                      class="px-2.5 py-1 rounded-lg bg-brand-500/10 text-brand-300 text-xs font-mono hover:bg-brand-500/20 transition-colors cursor-pointer">
+                {{<span x-text="v"></span>}}
+              </button>
+            </template>
+          </div>
+        </div>
+
+        <textarea name="message_template" id="messageTemplate" required rows="6"
+                  class="w-full px-4 py-3 rounded-xl bg-dark-900 border border-dark-700 text-white text-sm font-mono placeholder-dark-500
+                         focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
+                  placeholder="📊 *Laporan Laptop Hari Ini*&#10;&#10;Total: {{total_laptop}}&#10;Dipinjam: {{laptop_dipinjam}}&#10;Tersedia: {{laptop_tersedia}}"><%= command ? command.messageTemplate : '' %></textarea>
+        <p class="text-xs text-dark-500 mt-1">Gunakan <code class="text-dark-300">{{variabel}}</code> untuk data dinamis. Mendukung format WhatsApp (*bold*, _italic_)</p>
+      </div>
+
+      <!-- Group Access Filter -->
+      <div class="space-y-3" x-data="{ allGroups: <%= command ? command.allGroups : true %> }">
+        <label class="block text-xs font-medium text-dark-300">Filter Akses Grup</label>
+
+        <div class="flex items-center gap-3 py-2">
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" name="all_groups" class="sr-only peer" x-model="allGroups"
+                   <%= command && command.allGroups ? 'checked' : (!command ? 'checked' : '') %>>
+            <div class="w-9 h-5 bg-dark-700 rounded-full peer peer-checked:bg-brand-500 peer-focus:ring-2 peer-focus:ring-brand-500/30 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+          </label>
+          <span class="text-sm text-dark-300">Semua Grup</span>
+        </div>
+
+        <div x-show="!allGroups" x-transition class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <% groups.forEach(group => { %>
+            <label class="flex items-center gap-3 p-3 rounded-xl bg-dark-800 border border-dark-700 cursor-pointer hover:border-brand-500/30 transition-colors">
+              <input type="checkbox" name="group_ids" value="<%= group.id %>"
+                     class="w-4 h-4 rounded bg-dark-900 border-dark-600 text-brand-500 focus:ring-brand-500/30"
+                     <%= command && command.commandGroups && command.commandGroups.some(cg => cg.waGroupId === group.id) ? 'checked' : '' %>>
+              <div>
+                <p class="text-sm text-white"><%= group.name %></p>
+                <p class="text-[10px] text-dark-500 font-mono"><%= group.jid %></p>
+              </div>
+            </label>
+          <% }) %>
+        </div>
+      </div>
+
+      <% if (command) { %>
+        <div class="flex items-center gap-3 py-2">
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" name="is_active" class="sr-only peer" <%= command.isActive ? 'checked' : '' %>>
+            <div class="w-9 h-5 bg-dark-700 rounded-full peer peer-checked:bg-brand-500 peer-focus:ring-2 peer-focus:ring-brand-500/30 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+          </label>
+          <span class="text-sm text-dark-300">Aktif</span>
+        </div>
+      <% } %>
+
+      <div class="flex gap-3 pt-2">
+        <button type="submit"
+                class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 text-white text-sm font-medium hover:from-brand-500 hover:to-brand-400 transition-all shadow-lg shadow-brand-500/20">
+          <%= command ? 'Simpan Perubahan' : 'Buat Perintah' %>
+        </button>
+        <a href="/commands" class="px-6 py-2.5 rounded-xl bg-dark-700 text-dark-300 text-sm font-medium hover:bg-dark-600 hover:text-white transition-all">
+          Batal
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function commandBuilder() {
+  return {
+    selectedAppId: '<%= command ? command.appId : '' %>',
+    selectedActionId: '<%= command ? command.actionId : '' %>',
+    actions: [],
+    variables: [],
+    selectedAction: null,
+
+    init() {
+      if (this.selectedAppId) {
+        this.loadManifest();
+      }
+    },
+
+    loadManifest() {
+      this.actions = [];
+      this.variables = [];
+      this.selectedAction = null;
+
+      const option = document.querySelector(`select[name="app_id"] option[value="${this.selectedAppId}"]`);
+      if (!option) return;
+
+      const manifest = option.getAttribute('data-manifest');
+      if (!manifest || manifest === 'null') return;
+
+      try {
+        const data = JSON.parse(manifest);
+        this.actions = data.actions || [];
+        if (this.selectedActionId) {
+          this.onActionChange();
+        }
+      } catch (e) {
+        console.error('Parse manifest error:', e);
+      }
+    },
+
+    onActionChange() {
+      this.selectedAction = this.actions.find(a => a.id === this.selectedActionId) || null;
+      this.variables = this.selectedAction?.variables || [];
+    },
+
+    insertVariable(varName) {
+      const textarea = document.getElementById('messageTemplate');
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = textarea.value;
+      const insert = `{{${varName}}}`;
+      textarea.value = text.substring(0, start) + insert + text.substring(end);
+      textarea.selectionStart = textarea.selectionEnd = start + insert.length;
+      textarea.focus();
+    }
+  };
+}
+</script>

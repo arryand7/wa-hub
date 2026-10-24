@@ -1,0 +1,96 @@
+<!-- Schedules List -->
+<div class="space-y-6 fade-in">
+  <div class="flex items-center justify-between">
+    <div>
+      <h3 class="text-lg font-semibold text-white">Jadwal Otomatis</h3>
+      <p class="text-sm text-dark-400 mt-0.5">Kelola pengiriman laporan terjadwal ke grup WA</p>
+    </div>
+    <a href="/schedules/create" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 text-white text-sm font-medium hover:from-brand-500 hover:to-brand-400 transition-all shadow-lg shadow-brand-500/20">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Tambah Jadwal
+    </a>
+  </div>
+
+  <% if (schedules.length === 0) { %>
+    <div class="glass-card rounded-2xl p-12 text-center">
+      <svg class="w-16 h-16 text-dark-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p class="text-dark-400 font-medium">Belum ada jadwal</p>
+      <p class="text-sm text-dark-500 mt-1">Buat jadwal pengiriman otomatis ke grup WA</p>
+    </div>
+  <% } else { %>
+    <div class="grid gap-4">
+      <% schedules.forEach(schedule => { %>
+        <div class="glass-card rounded-2xl p-5 hover:border-brand-500/20 transition-all">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex items-start gap-4 flex-1 min-w-0">
+              <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0
+                <%= schedule.isActive ? 'bg-amber-500/10' : 'bg-dark-700' %>">
+                <svg class="w-6 h-6 <%= schedule.isActive ? 'text-amber-400' : 'text-dark-400' %>" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <code class="px-2.5 py-1 rounded-lg bg-dark-800 text-dark-200 text-sm font-mono"><%= schedule.cronExpression %></code>
+                  <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase
+                    <%= schedule.isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-dark-700 text-dark-400' %>">
+                    <%= schedule.isActive ? 'Aktif' : 'Nonaktif' %>
+                  </span>
+                </div>
+                <div class="flex items-center gap-3 mt-2 text-xs text-dark-400 flex-wrap">
+                  <span class="flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                    <span class="text-purple-300 font-mono"><%= schedule.command.triggerCommand %></span>
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7"/></svg>
+                    → <%= schedule.targetGroup.name %>
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    <%= schedule.command.app.name %>
+                  </span>
+                </div>
+                <% if (schedule.lastRunAt) { %>
+                  <p class="text-xs text-dark-500 mt-1.5">
+                    Terakhir jalan: <%= new Date(schedule.lastRunAt).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) %>
+                  </p>
+                <% } %>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <!-- Test Send -->
+              <form action="/schedules/<%= schedule.id %>/test" method="POST">
+                <button type="submit" title="Test Kirim Sekarang"
+                        class="p-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </button>
+              </form>
+              <!-- Toggle -->
+              <form action="/schedules/<%= schedule.id %>/toggle" method="POST">
+                <button type="submit" title="<%= schedule.isActive ? 'Nonaktifkan' : 'Aktifkan' %>"
+                        class="p-2 rounded-lg <%= schedule.isActive ? 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20' : 'bg-brand-500/10 text-brand-400 hover:bg-brand-500/20' %> transition-colors">
+                  <% if (schedule.isActive) { %>
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <% } else { %>
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
+                  <% } %>
+                </button>
+              </form>
+              <!-- Edit -->
+              <a href="/schedules/<%= schedule.id %>/edit" class="p-2 rounded-lg bg-dark-700 text-dark-300 hover:bg-dark-600 hover:text-white transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </a>
+              <!-- Delete -->
+              <form action="/schedules/<%= schedule.id %>/delete" method="POST" onsubmit="return confirm('Hapus jadwal ini?')">
+                <button type="submit" class="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>

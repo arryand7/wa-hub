@@ -1,0 +1,67 @@
+<!-- App Create/Edit Form -->
+<div class="max-w-2xl mx-auto space-y-6 fade-in">
+  <div>
+    <a href="/apps" class="text-sm text-dark-400 hover:text-brand-400 transition-colors">← Kembali ke Daftar Aplikasi</a>
+  </div>
+
+  <div class="glass-card rounded-2xl p-6">
+    <h3 class="text-lg font-semibold text-white mb-6"><%= app ? 'Edit' : 'Tambah' %> Aplikasi</h3>
+
+    <form action="<%= app ? '/apps/' + app.id : '/apps' %>" method="POST" class="space-y-5">
+
+      <div>
+        <label class="block text-xs font-medium text-dark-300 mb-1.5">Nama Aplikasi</label>
+        <input type="text" name="name" required value="<%= app ? app.name : '' %>"
+               class="w-full px-4 py-3 rounded-xl bg-dark-900 border border-dark-700 text-white text-sm placeholder-dark-500
+                      focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
+               placeholder="Contoh: Aplikasi Laptop Sekolah">
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-dark-300 mb-1.5">Slug</label>
+        <input type="text" name="slug" required value="<%= app ? app.slug : '' %>"
+               class="w-full px-4 py-3 rounded-xl bg-dark-900 border border-dark-700 text-white text-sm font-mono placeholder-dark-500
+                      focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
+               placeholder="contoh: laptop-sekolah">
+        <p class="text-xs text-dark-500 mt-1">Huruf kecil, tanpa spasi, gunakan tanda hubung (-)</p>
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-dark-300 mb-1.5">Base URL</label>
+        <input type="url" name="base_url" required value="<%= app ? app.baseUrl : '' %>"
+               class="w-full px-4 py-3 rounded-xl bg-dark-900 border border-dark-700 text-white text-sm placeholder-dark-500
+                      focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
+               placeholder="https://laptop.sekolah.sch.id">
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-dark-300 mb-1.5">Secret Key</label>
+        <input type="text" name="secret_key" required value="<%= app ? app.secretKey : '' %>"
+               class="w-full px-4 py-3 rounded-xl bg-dark-900 border border-dark-700 text-white text-sm font-mono placeholder-dark-500
+                      focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all"
+               placeholder="secret-key-untuk-autentikasi">
+        <p class="text-xs text-dark-500 mt-1">Dikirim sebagai header <code class="text-dark-300">X-Bot-Secret-Key</code> saat memanggil API aplikasi</p>
+      </div>
+
+      <% if (app) { %>
+        <div class="flex items-center gap-3 py-2">
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" name="is_active" class="sr-only peer" <%= app.isActive ? 'checked' : '' %>>
+            <div class="w-9 h-5 bg-dark-700 rounded-full peer peer-checked:bg-brand-500 peer-focus:ring-2 peer-focus:ring-brand-500/30 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+          </label>
+          <span class="text-sm text-dark-300">Aktif</span>
+        </div>
+      <% } %>
+
+      <div class="flex gap-3 pt-2">
+        <button type="submit"
+                class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 text-white text-sm font-medium hover:from-brand-500 hover:to-brand-400 transition-all shadow-lg shadow-brand-500/20">
+          <%= app ? 'Simpan Perubahan' : 'Tambah Aplikasi' %>
+        </button>
+        <a href="/apps" class="px-6 py-2.5 rounded-xl bg-dark-700 text-dark-300 text-sm font-medium hover:bg-dark-600 hover:text-white transition-all">
+          Batal
+        </a>
+      </div>
+    </form>
+  </div>
+</div>

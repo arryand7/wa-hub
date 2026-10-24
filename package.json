@@ -1,0 +1,40 @@
+{
+  "name": "wa-hub-sabira",
+  "version": "1.0.0",
+  "description": "Central WhatsApp Bot Hub - Dashboard Admin untuk multi-aplikasi sekolah",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "db:generate": "npx prisma generate",
+    "db:push": "npx prisma db push",
+    "db:seed": "node prisma/seed.js",
+    "db:studio": "npx prisma studio",
+    "setup": "npm run db:generate && npm run db:push && npm run db:seed"
+  },
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "hub",
+    "school"
+  ],
+  "author": "Sabira",
+  "license": "MIT",
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "@whiskeysockets/baileys": "^7.0.0-rc14",
+    "axios": "^1.20.0",
+    "bcryptjs": "^3.0.3",
+    "connect-flash": "^0.1.1",
+    "dotenv": "^18.0.8",
+    "ejs": "^7.0.2",
+    "express": "^5.3.0",
+    "express-ejs-layouts": "^2.5.1",
+    "express-session": "^1.19.0",
+    "node-cron": "^4.6.0",
+    "pino": "^10.4.0",
+    "prisma": "^6.19.3",
+    "qrcode": "^1.5.4",
+    "socket.io": "^4.8.4"
+  }
+}
