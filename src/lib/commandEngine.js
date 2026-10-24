@@ -33,9 +33,26 @@ async function handleMessage(msg) {
     if (!command || !command.isActive || !command.app.isActive) return;
 
     // Check group access
-    if (isGroup && !command.allGroups) {
-      const allowedJids = command.commandGroups.map((cg) => cg.waGroup.jid);
-      if (!allowedJids.includes(remoteJid)) return;
+    let registeredGroup = null;
+    if (isGroup) {
+      // Security check: Only groups registered in WA Hub are allowed to interact with the bot!
+      registeredGroup = await prisma.waGroup.findUnique({
+        where: { jid: remoteJid },
+      });
+
+      if (!registeredGroup) {
+        console.log(`🔒 Perintah "${trigger}" diabaikan: Grup "${remoteJid}" tidak terdaftar di WA Hub`);
+        return;
+      }
+
+      // If command is restricted to specific groups, verify membership
+      if (!command.allGroups) {
+        const allowedJids = command.commandGroups.map((cg) => cg.waGroup.jid);
+        if (!allowedJids.includes(remoteJid)) {
+          console.log(`🔒 Perintah "${trigger}" diabaikan: Grup "${registeredGroup.name}" tidak diizinkan untuk perintah ini`);
+          return;
+        }
+      }
     }
 
     // Map arguments to API parameters
@@ -99,11 +116,7 @@ async function handleMessage(msg) {
     await wa.sendMessage(remoteJid, replyText);
 
     // Resolve group name
-    let groupName = null;
-    if (isGroup) {
-      const group = await prisma.waGroup.findUnique({ where: { jid: remoteJid } });
-      groupName = group?.name || remoteJid;
-    }
+    const groupName = isGroup ? (registeredGroup?.name || remoteJid) : null;
 
     // Log message
     await prisma.messageLog.create({

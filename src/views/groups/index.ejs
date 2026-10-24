@@ -1,64 +1,568 @@
-<!-- Groups List -->
-<div class="space-y-6 fade-in">
-  <div class="flex items-center justify-between">
+<!-- Groups Management -->
+<div class="space-y-6 fade-in" x-data="groupsManager()">
+
+  <!-- ─── Header & Actions ─── -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
-      <h3 class="text-lg font-semibold text-white">Grup WhatsApp</h3>
-      <p class="text-sm text-dark-400 mt-0.5">Daftar grup WA yang disinkronkan dari perangkat</p>
+      <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+        <span>Grup WhatsApp</span>
+        <span class="text-xs px-2.5 py-0.5 rounded-full bg-brand-500/10 text-brand-400 font-mono font-medium border border-brand-500/20"
+              x-text="allGroups.length + ' grup terdaftar'">
+          <%= groups.length %> grup terdaftar
+        </span>
+      </h3>
+      <p class="text-sm text-dark-400 mt-0.5">Daftar grup WhatsApp yang memiliki izin akses bot dan jadwal pesan</p>
     </div>
-    <form action="/groups/sync" method="POST">
-      <button type="submit" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 text-white text-sm font-medium hover:from-brand-500 hover:to-brand-400 transition-all shadow-lg shadow-brand-500/20">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-        Sync Daftar Grup
+
+    <div class="flex items-center gap-2.5 flex-wrap">
+      <!-- Sync Button (Opens Selection Modal) -->
+      <button type="button" @click="openSyncModal()"
+              class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 text-white text-sm font-medium hover:from-brand-500 hover:to-brand-400 transition-all shadow-lg shadow-brand-500/20 cursor-pointer">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        <span>Pilih & Sync Grup WA</span>
       </button>
-    </form>
+
+      <!-- Delete All Button -->
+      <% if (groups.length > 0) { %>
+        <button type="button" @click="confirmDeleteAll()"
+                class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-red-500/30 text-red-400 text-sm font-medium hover:bg-red-500/10 transition-colors cursor-pointer">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+          <span>Hapus Semua</span>
+        </button>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- ─── Security Notice Box ─── -->
+  <div class="glass-card rounded-2xl p-4 border border-brand-500/20 bg-brand-950/20 flex items-start gap-3">
+    <div class="w-8 h-8 rounded-xl bg-brand-500/10 border border-brand-500/30 flex items-center justify-center flex-shrink-0 text-brand-400 mt-0.5">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+      </svg>
+    </div>
+    <div class="text-xs space-y-1">
+      <p class="font-semibold text-brand-300">Proteksi Akses Grup Aktif (Whitelist)</p>
+      <p class="text-dark-300 leading-relaxed">
+        Bot WhatsApp hanya akan memproses perintah pada grup yang <strong>terdaftar di tabel ini</strong>. Grup pribadi atau grup luar yang dihapus/tidak dicentang otomatis diblokir secara total demi keamanan privasi Anda.
+      </p>
+    </div>
   </div>
 
   <% if (groups.length === 0) { %>
+    <!-- Empty State -->
     <div class="glass-card rounded-2xl p-12 text-center">
-      <svg class="w-16 h-16 text-dark-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      <p class="text-dark-400 font-medium">Belum ada grup</p>
-      <p class="text-sm text-dark-500 mt-1">Pastikan WA terhubung, lalu klik "Sync Daftar Grup"</p>
+      <div class="w-16 h-16 rounded-2xl bg-dark-800 border border-dark-700 flex items-center justify-center mx-auto mb-4 text-dark-500">
+        <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+      <p class="text-white font-medium text-base">Belum ada grup yang diizinkan</p>
+      <p class="text-sm text-dark-400 mt-1 max-w-md mx-auto">
+        Gunakan tombol "Pilih & Sync Grup WA" untuk memilih grup mana saja yang boleh berinteraksi dengan bot.
+      </p>
+      <button type="button" @click="openSyncModal()"
+              class="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 text-white text-sm font-medium hover:from-brand-500 hover:to-brand-400 transition-all shadow-lg shadow-brand-500/20 cursor-pointer">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Pilih & Tambahkan Grup Sekarang
+      </button>
     </div>
   <% } else { %>
+
+    <!-- ─── Search & Bulk Action Toolbar ─── -->
+    <div class="glass-card rounded-2xl p-4 space-y-3">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <!-- Search Input -->
+        <div class="relative flex-1 max-w-md">
+          <svg class="w-4 h-4 text-dark-500 absolute left-3.5 top-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input type="text" x-model="search" placeholder="Cari nama grup atau JID..."
+                 class="w-full pl-10 pr-9 py-2 rounded-xl bg-dark-900 border border-dark-700 text-white text-sm placeholder-dark-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all">
+          <button type="button" x-show="search" @click="search = ''" class="absolute right-3 top-2.5 text-dark-500 hover:text-white">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <!-- Filter Count -->
+        <div class="text-xs text-dark-400 flex items-center gap-2">
+          <span>Menampilkan <strong class="text-white" x-text="filteredGroups.length"></strong> dari <span x-text="allGroups.length"></span> grup</span>
+        </div>
+      </div>
+
+      <!-- ─── Floating / Contextual Bulk Action Bar ─── -->
+      <div x-show="selectedIds.length > 0" x-transition
+           class="p-3 rounded-xl bg-dark-900/90 border border-brand-500/30 flex items-center justify-between gap-3 flex-wrap">
+        <div class="flex items-center gap-3">
+          <span class="flex items-center justify-center w-6 h-6 rounded-lg bg-brand-500/20 text-brand-400 text-xs font-bold">✓</span>
+          <span class="text-sm font-medium text-white">
+            <span class="text-brand-400 font-bold" x-text="selectedIds.length"></span> grup dipilih
+          </span>
+          <button type="button" @click="clearSelection()" class="text-xs text-dark-400 hover:text-white underline cursor-pointer">
+            Batalkan
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button type="button" @click="selectAllFiltered()" class="text-xs px-3 py-1.5 rounded-lg bg-dark-800 text-dark-300 hover:text-white border border-dark-700 transition-colors cursor-pointer">
+            Pilih Semua Hasil Filter (<span x-text="filteredGroups.length"></span>)
+          </button>
+          <button type="button" @click="confirmBulkDelete()"
+                  class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-red-600 to-red-500 text-white text-xs font-semibold hover:from-red-500 hover:to-red-400 transition-all shadow-md shadow-red-500/20 cursor-pointer">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+            <span>Hapus Terpilih (<span x-text="selectedIds.length"></span>)</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Table ─── -->
     <div class="glass-card rounded-2xl overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
-            <tr class="border-b border-dark-700">
-              <th class="text-left px-5 py-3 text-xs font-semibold text-dark-400 uppercase tracking-wider">#</th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-dark-400 uppercase tracking-wider">Nama Grup</th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-dark-400 uppercase tracking-wider">JID</th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-dark-400 uppercase tracking-wider">Terakhir Sync</th>
+            <tr class="border-b border-dark-700 bg-dark-900/40">
+              <!-- Checkbox Header -->
+              <th class="w-12 px-4 py-3 text-center">
+                <input type="checkbox"
+                       :checked="isAllFilteredSelected"
+                       @change="toggleSelectAllFiltered()"
+                       class="w-4 h-4 rounded bg-dark-900 border-dark-600 text-brand-500 focus:ring-brand-500/30 cursor-pointer"
+                       title="Pilih semua yang tampil">
+              </th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-dark-400 uppercase tracking-wider">#</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-dark-400 uppercase tracking-wider">Nama Grup</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-dark-400 uppercase tracking-wider">JID (ID WhatsApp)</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-dark-400 uppercase tracking-wider">Terakhir Sync</th>
               <th class="text-right px-5 py-3 text-xs font-semibold text-dark-400 uppercase tracking-wider">Aksi</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-dark-800">
-            <% groups.forEach((group, idx) => { %>
-              <tr class="table-row">
-                <td class="px-5 py-3 text-dark-400"><%= idx + 1 %></td>
-                <td class="px-5 py-3">
+            <template x-for="(group, idx) in filteredGroups" :key="group.id">
+              <tr class="table-row hover:bg-dark-800/40 transition-colors"
+                  :class="selectedIds.includes(group.id) ? 'bg-brand-500/5' : ''">
+                <!-- Checkbox -->
+                <td class="px-4 py-3 text-center">
+                  <input type="checkbox"
+                         :value="group.id"
+                         :checked="selectedIds.includes(group.id)"
+                         @change="toggleSelectId(group.id)"
+                         class="w-4 h-4 rounded bg-dark-900 border-dark-600 text-brand-500 focus:ring-brand-500/30 cursor-pointer">
+                </td>
+
+                <!-- Number -->
+                <td class="px-4 py-3 text-dark-500 text-xs font-mono" x-text="idx + 1"></td>
+
+                <!-- Group Name -->
+                <td class="px-4 py-3">
                   <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center flex-shrink-0">
-                      <svg class="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7"/></svg>
+                    <div class="w-8 h-8 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7"/>
+                      </svg>
                     </div>
-                    <span class="font-medium text-white"><%= group.name %></span>
+                    <span class="font-medium text-white" x-text="group.name"></span>
                   </div>
                 </td>
-                <td class="px-5 py-3 font-mono text-xs text-dark-400"><%= group.jid %></td>
-                <td class="px-5 py-3 text-dark-400 text-xs"><%= new Date(group.syncedAt).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) %></td>
+
+                <!-- JID with Click to Copy -->
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-2 group/copy">
+                    <span class="font-mono text-xs text-dark-400 select-all" x-text="group.jid"></span>
+                    <button type="button" @click="copyText(group.jid)"
+                            class="opacity-0 group-hover/copy:opacity-100 transition-opacity p-1 text-dark-500 hover:text-brand-400 rounded"
+                            title="Salin JID">
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+
+                <!-- Terakhir Sync -->
+                <td class="px-4 py-3 text-dark-400 text-xs" x-text="formatDate(group.syncedAt)"></td>
+
+                <!-- Single Delete Action -->
                 <td class="px-5 py-3 text-right">
-                  <form action="/groups/<%= group.id %>/delete" method="POST" class="inline" onsubmit="return confirm('Hapus grup ini dari daftar?')">
-                    <button type="submit" class="p-1.5 rounded-lg text-dark-500 hover:text-red-400 hover:bg-red-500/10 transition-colors">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                  <form :action="'/groups/' + group.id + '/delete'" method="POST" class="inline"
+                        @submit="confirmSingleDelete($event, group)">
+                    <button type="submit"
+                            class="p-1.5 rounded-lg text-dark-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                            title="Hapus grup dari daftar">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                      </svg>
                     </button>
                   </form>
                 </td>
               </tr>
-            <% }) %>
+            </template>
+
+            <!-- Search Empty State -->
+            <tr x-show="filteredGroups.length === 0">
+              <td colspan="6" class="px-6 py-10 text-center text-dark-400">
+                <svg class="w-8 h-8 text-dark-600 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <p class="font-medium text-dark-300">Tidak ada grup yang sesuai</p>
+                <p class="text-xs text-dark-500 mt-1">Coba gunakan kata kunci lain</p>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
     </div>
-    <p class="text-xs text-dark-500 text-center">Total: <%= groups.length %> grup</p>
   <% } %>
+
+  <!-- ─── HIDDEN FORMS FOR BULK ACTIONS ─── -->
+  <form id="formBulkDelete" action="/groups/bulk-delete" method="POST" style="display: none;">
+    <input type="hidden" name="group_ids" id="bulkDeleteInput">
+  </form>
+
+  <form id="formDeleteAll" action="/groups/delete-all" method="POST" style="display: none;"></form>
+
+  <!-- ─── MODAL: PILIH & SYNC GRUP DARI WHATSAPP ─── -->
+  <div x-show="syncModalOpen" x-transition.opacity
+       class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
+       style="display: none;" @keydown.escape.window="syncModalOpen = false">
+
+    <div @click.away="syncModalOpen = false"
+         class="glass-card w-full max-w-2xl rounded-2xl border border-dark-700 bg-dark-900 shadow-2xl flex flex-col max-h-[88vh] overflow-hidden">
+
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-dark-700 flex items-center justify-between">
+        <div>
+          <h4 class="text-base font-semibold text-white flex items-center gap-2">
+            <span>Pilih Grup WhatsApp untuk Diizinkan</span>
+          </h4>
+          <p class="text-xs text-dark-400 mt-0.5">
+            Centang hanya grup yang ingin diizinkan. Grup yang tidak dicentang tidak akan disimpan di WA Hub.
+          </p>
+        </div>
+        <button type="button" @click="syncModalOpen = false"
+                class="p-1 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800 transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 overflow-y-auto space-y-4 flex-1">
+
+        <!-- Loading State -->
+        <div x-show="syncLoading" class="py-12 text-center space-y-3">
+          <div class="w-10 h-10 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p class="text-sm text-dark-300 font-medium">Mengambil daftar grup langsung dari WhatsApp...</p>
+          <p class="text-xs text-dark-500">Mohon tunggu beberapa detik</p>
+        </div>
+
+        <!-- Error State -->
+        <div x-show="!syncLoading && syncError" class="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm space-y-2">
+          <p class="font-semibold" x-text="syncError"></p>
+          <p class="text-xs text-dark-400">Pastikan perangkat WhatsApp sudah terhubung di dashboard.</p>
+          <a href="/dashboard" class="inline-block mt-2 px-3 py-1.5 rounded-lg bg-red-500/20 text-red-300 text-xs font-medium hover:bg-red-500/30">
+            Buka Dashboard WA
+          </a>
+        </div>
+
+        <!-- Group List Content -->
+        <div x-show="!syncLoading && !syncError" class="space-y-4">
+          <!-- Search & Select Helpers -->
+          <div class="space-y-2.5">
+            <div class="relative">
+              <svg class="w-4 h-4 text-dark-500 absolute left-3.5 top-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+              <input type="text" x-model="syncSearch" placeholder="Cari nama grup WA (cth: sabira, kelas, guru)..."
+                     class="w-full pl-10 pr-9 py-2 rounded-xl bg-dark-950 border border-dark-700 text-white text-sm placeholder-dark-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all">
+              <button type="button" x-show="syncSearch" @click="syncSearch = ''" class="absolute right-3 top-2.5 text-dark-500 hover:text-white">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+
+            <!-- Quick Action Pills -->
+            <div class="flex items-center justify-between text-xs flex-wrap gap-2 pt-1">
+              <div class="flex items-center gap-1.5">
+                <button type="button" @click="toggleSelectAllWa(true)"
+                        class="px-2.5 py-1 rounded-lg bg-dark-800 text-dark-300 hover:text-white border border-dark-700 cursor-pointer">
+                  Pilih Semua (<span x-text="filteredWaGroups.length"></span>)
+                </button>
+                <button type="button" @click="selectUnsyncedWa()"
+                        class="px-2.5 py-1 rounded-lg bg-dark-800 text-brand-400 hover:text-brand-300 border border-dark-700 cursor-pointer">
+                  Pilih yang Belum Terdaftar
+                </button>
+                <button type="button" @click="toggleSelectAllWa(false)"
+                        class="px-2.5 py-1 rounded-lg bg-dark-800 text-dark-400 hover:text-white border border-dark-700 cursor-pointer">
+                  Kosongkan
+                </button>
+              </div>
+              <span class="text-dark-400 font-mono">
+                <strong class="text-brand-400" x-text="selectedWaJids.length"></strong> dipilih dari <span x-text="waGroups.length"></span> grup WA
+              </span>
+            </div>
+          </div>
+
+          <!-- Groups Scrollbox -->
+          <div class="border border-dark-700 rounded-xl max-h-72 overflow-y-auto divide-y divide-dark-800 bg-dark-950/60">
+            <template x-for="g in filteredWaGroups" :key="g.jid">
+              <label class="flex items-center gap-3 p-3 hover:bg-dark-800/60 cursor-pointer transition-colors"
+                     :class="selectedWaJids.includes(g.jid) ? 'bg-brand-500/5' : ''">
+                <input type="checkbox"
+                       :value="g.jid"
+                       :checked="selectedWaJids.includes(g.jid)"
+                       @change="toggleSelectWaJid(g.jid)"
+                       class="w-4 h-4 rounded bg-dark-900 border-dark-600 text-brand-500 focus:ring-brand-500/30 cursor-pointer">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <p class="text-sm font-medium text-white truncate" x-text="g.name"></p>
+                    <span x-show="g.isSynced"
+                          class="px-1.5 py-0.2 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      Terdaftar
+                    </span>
+                    <span x-show="!g.isSynced"
+                          class="px-1.5 py-0.2 rounded text-[10px] font-medium bg-dark-800 text-dark-500 border border-dark-700">
+                      Baru
+                    </span>
+                  </div>
+                  <p class="text-[11px] font-mono text-dark-500 truncate" x-text="g.jid"></p>
+                </div>
+              </label>
+            </template>
+
+            <div x-show="filteredWaGroups.length === 0" class="py-8 text-center text-xs text-dark-500">
+              Tidak ada grup WA yang cocok dengan "<span x-text="syncSearch"></span>"
+            </div>
+          </div>
+
+          <!-- Clean Unselected Option (Safe Cleanup) -->
+          <div class="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/20 text-xs">
+            <label class="flex items-start gap-2.5 cursor-pointer">
+              <input type="checkbox" x-model="cleanUnselected"
+                     class="w-4 h-4 mt-0.5 rounded bg-dark-900 border-dark-600 text-amber-500 focus:ring-amber-500/30">
+              <div>
+                <span class="font-semibold text-amber-300">Bersihkan grup lainnya yang tidak dicentang</span>
+                <p class="text-dark-400 mt-0.5 leading-relaxed">
+                  Jika dicentang, grup di database yang tidak Anda centang di atas akan otomatis dihapus. Sangat praktis untuk langsung merapikan daftar tanpa perlu hapus satu-satu.
+                </p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-4 border-t border-dark-700 bg-dark-950/80 flex items-center justify-between">
+        <button type="button" @click="syncModalOpen = false"
+                class="px-4 py-2 rounded-xl bg-dark-800 text-dark-300 text-xs font-medium hover:bg-dark-700 hover:text-white transition-colors cursor-pointer">
+          Batal
+        </button>
+
+        <form action="/groups/sync-selected" method="POST" id="formSyncSelected" class="inline">
+          <input type="hidden" name="jids" :value="JSON.stringify(selectedWaJids)">
+          <input type="hidden" name="clean_unselected" :value="cleanUnselected ? 'true' : 'false'">
+          <button type="submit"
+                  :disabled="syncLoading || selectedWaJids.length === 0"
+                  class="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 text-white text-xs font-semibold hover:from-brand-500 hover:to-brand-400 transition-all shadow-lg shadow-brand-500/20 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span>Simpan <span x-text="selectedWaJids.length"></span> Grup Terpilih</span>
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification (Copied) -->
+  <div x-show="copiedNotification" x-transition
+       class="fixed bottom-6 right-6 z-50 px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-medium shadow-xl flex items-center gap-2"
+       style="display: none;">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+    <span>JID berhasil disalin ke clipboard!</span>
+  </div>
+
 </div>
+
+<!-- ─── Alpine.js Component Logic ─── -->
+<script>
+function groupsManager() {
+  return {
+    allGroups: <%- JSON.stringify(groups || []).replace(/</g, '\\u003c') %>,
+    search: '',
+    selectedIds: [],
+    syncModalOpen: false,
+    syncLoading: false,
+    syncError: null,
+    waGroups: [],
+    syncSearch: '',
+    selectedWaJids: [],
+    cleanUnselected: false,
+    copiedNotification: false,
+
+    // Filtered registered groups
+    get filteredGroups() {
+      if (!this.search.trim()) return this.allGroups;
+      const q = this.search.toLowerCase();
+      return this.allGroups.filter(g =>
+        (g.name && g.name.toLowerCase().includes(q)) ||
+        (g.jid && g.jid.toLowerCase().includes(q))
+      );
+    },
+
+    // Check if all filtered groups are currently selected
+    get isAllFilteredSelected() {
+      if (this.filteredGroups.length === 0) return false;
+      return this.filteredGroups.every(g => this.selectedIds.includes(g.id));
+    },
+
+    toggleSelectId(id) {
+      if (this.selectedIds.includes(id)) {
+        this.selectedIds = this.selectedIds.filter(i => i !== id);
+      } else {
+        this.selectedIds.push(id);
+      }
+    },
+
+    toggleSelectAllFiltered() {
+      if (this.isAllFilteredSelected) {
+        const filteredIdSet = new Set(this.filteredGroups.map(g => g.id));
+        this.selectedIds = this.selectedIds.filter(id => !filteredIdSet.has(id));
+      } else {
+        const set = new Set(this.selectedIds);
+        this.filteredGroups.forEach(g => set.add(g.id));
+        this.selectedIds = Array.from(set);
+      }
+    },
+
+    selectAllFiltered() {
+      const set = new Set(this.selectedIds);
+      this.filteredGroups.forEach(g => set.add(g.id));
+      this.selectedIds = Array.from(set);
+    },
+
+    clearSelection() {
+      this.selectedIds = [];
+    },
+
+    confirmSingleDelete(e, group) {
+      if (!confirm(`Hapus grup "${group.name}" dari daftar?\n\nSetelah dihapus, bot WA Hub TIDAK AKAN BISA merespon perintah atau mengirim pesan ke grup ini lagi.`)) {
+        e.preventDefault();
+      }
+    },
+
+    confirmBulkDelete() {
+      const count = this.selectedIds.length;
+      if (count === 0) return;
+      if (confirm(`Apakah Anda yakin ingin menghapus ${count} grup terpilih dari daftar?\n\nSetelah dihapus, bot WA Hub TIDAK AKAN BISA merespon atau mengirim pesan ke grup-grup tersebut lagi.`)) {
+        document.getElementById('bulkDeleteInput').value = JSON.stringify(this.selectedIds);
+        document.getElementById('formBulkDelete').submit();
+      }
+    },
+
+    confirmDeleteAll() {
+      const total = this.allGroups.length;
+      if (confirm(`⚠️ PERINGATAN: Apakah Anda yakin ingin menghapus SEMUA (${total}) grup dari daftar WA Hub?\n\nSemua perintah bot tidak akan dapat diakses dari grup mana pun sampai Anda mendaftarkan grup kembali.`)) {
+        document.getElementById('formDeleteAll').submit();
+      }
+    },
+
+    // Copy JID helper
+    copyText(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        this.copiedNotification = true;
+        setTimeout(() => { this.copiedNotification = false; }, 2000);
+      }).catch(err => {
+        console.error('Copy failed:', err);
+      });
+    },
+
+    formatDate(dateStr) {
+      if (!dateStr) return '-';
+      try {
+        return new Date(dateStr).toLocaleString('id-ID', {
+          timeZone: 'Asia/Jakarta',
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch (e) {
+        return dateStr;
+      }
+    },
+
+    // ─── Modal WA Groups ───
+    async openSyncModal() {
+      this.syncModalOpen = true;
+      this.syncLoading = true;
+      this.syncError = null;
+      this.syncSearch = '';
+      this.cleanUnselected = false;
+
+      try {
+        const res = await fetch('/groups/api/wa-list');
+        const data = await res.json();
+
+        if (!data.success) {
+          this.syncError = data.message || 'Gagal mengambil grup dari WhatsApp';
+          this.waGroups = [];
+        } else {
+          this.waGroups = data.groups || [];
+          // Pre-select already synced groups
+          this.selectedWaJids = this.waGroups
+            .filter(g => g.isSynced)
+            .map(g => g.jid);
+        }
+      } catch (err) {
+        this.syncError = 'Gagal menghubungi server: ' + err.message;
+        this.waGroups = [];
+      } finally {
+        this.syncLoading = false;
+      }
+    },
+
+    get filteredWaGroups() {
+      if (!this.syncSearch.trim()) return this.waGroups;
+      const q = this.syncSearch.toLowerCase();
+      return this.waGroups.filter(g =>
+        (g.name && g.name.toLowerCase().includes(q)) ||
+        (g.jid && g.jid.toLowerCase().includes(q))
+      );
+    },
+
+    toggleSelectWaJid(jid) {
+      if (this.selectedWaJids.includes(jid)) {
+        this.selectedWaJids = this.selectedWaJids.filter(j => j !== jid);
+      } else {
+        this.selectedWaJids.push(jid);
+      }
+    },
+
+    toggleSelectAllWa(checkAll) {
+      if (checkAll) {
+        const set = new Set(this.selectedWaJids);
+        this.filteredWaGroups.forEach(g => set.add(g.jid));
+        this.selectedWaJids = Array.from(set);
+      } else {
+        const visibleJids = new Set(this.filteredWaGroups.map(g => g.jid));
+        this.selectedWaJids = this.selectedWaJids.filter(j => !visibleJids.has(j));
+      }
+    },
+
+    selectUnsyncedWa() {
+      const set = new Set(this.selectedWaJids);
+      this.filteredWaGroups.filter(g => !g.isSynced).forEach(g => set.add(g.jid));
+      this.selectedWaJids = Array.from(set);
+    }
+  };
+}
+</script>
