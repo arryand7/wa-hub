@@ -7,9 +7,18 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // Create default admin
-  const username = process.env.ADMIN_USERNAME || 'admin';
-  const password = process.env.ADMIN_PASSWORD || 'admin123';
+  const username = process.env.ADMIN_USERNAME;
+  const password = process.env.ADMIN_PASSWORD;
+  const apiKey = process.env.API_KEY;
+
+  if (!username || !password || password.length < 10 ||
+      /replace-with|change-me|example|your-/i.test(password)) {
+    throw new Error('Set a unique ADMIN_USERNAME and a non-placeholder ADMIN_PASSWORD of at least 10 characters before seeding');
+  }
+  if (apiKey && (apiKey.length < 32 || /replace-with|change-me|example|your-/i.test(apiKey))) {
+    throw new Error('API_KEY must be random and at least 32 characters when provided');
+  }
+
   const hash = await bcrypt.hash(password, 12);
 
   await prisma.admin.upsert({
@@ -22,20 +31,20 @@ async function main() {
     },
   });
 
-  console.log(`✅ Admin created: ${username} / ${password}`);
+  console.log('✅ Admin account provisioned');
 
-  // Create default API key
-  await prisma.apiKey.upsert({
-    where: { keyValue: 'sabira-default-api-key-2024' },
-    update: {},
-    create: {
-      keyValue: 'sabira-default-api-key-2024',
-      label: 'Default API Key',
-      isActive: true,
-    },
-  });
-
-  console.log('✅ Default API Key created: sabira-default-api-key-2024');
+  if (apiKey) {
+    await prisma.apiKey.upsert({
+      where: { keyValue: apiKey },
+      update: {},
+      create: {
+        keyValue: apiKey,
+        label: 'Provisioned API Key',
+        isActive: true,
+      },
+    });
+    console.log('✅ API key provisioned');
+  }
   console.log('🎉 Seeding complete!');
 }
 

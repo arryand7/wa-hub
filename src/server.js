@@ -49,8 +49,8 @@ async function startWhatsApp() {
 async function start() {
   try {
     // Start server
-    server.listen(config.PORT, () => {
-      console.log(`\n🚀 WA Hub Sabira running on http://localhost:${config.PORT}`);
+    server.listen(config.PORT, config.HOST, () => {
+      console.log(`\n🚀 WA Hub Sabira running on http://${config.HOST}:${config.PORT}`);
       console.log(`   Environment: ${config.NODE_ENV}`);
       console.log(`   Timezone: ${config.TIMEZONE}\n`);
     });

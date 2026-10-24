@@ -9,7 +9,9 @@ const pino = require('pino');
 const QRCode = require('qrcode');
 const path = require('path');
 
-const SESSION_DIR = path.join(__dirname, '..', '..', 'wa-sessions');
+const SESSION_DIR = path.resolve(
+  process.env.WA_SESSION_DIR || path.join(__dirname, '..', '..', 'wa-sessions')
+);
 
 let sock = null;
 let qrString = null;

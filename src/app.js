@@ -16,8 +16,12 @@ const groupRoutes = require('./routes/groupRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const logRoutes = require('./routes/logRoutes');
 const apiRoutes = require('./routes/apiRoutes');
+const healthRoutes = require('./routes/healthRoutes');
 
 const app = express();
+
+// The public TLS endpoint terminates at the local Nginx reverse proxy.
+app.set('trust proxy', 'loopback');
 
 // ─── View Engine ──────────────────────────────────────────────
 app.set('view engine', 'ejs');
@@ -39,6 +43,8 @@ app.use(
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       httpOnly: true,
+      sameSite: 'lax',
+      secure: config.NODE_ENV === 'production',
     },
   })
 );
@@ -55,6 +61,7 @@ app.use((req, res, next) => {
 });
 
 // ─── Routes ──────────────────────────────────────────────────
+app.use('/healthz', healthRoutes);
 app.use('/auth', authRoutes);
 app.use('/', requireAuth, dashboardRoutes);
 app.use('/apps', requireAuth, appRoutes);
