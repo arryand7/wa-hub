@@ -47,7 +47,8 @@ async function connectWA() {
       keys: makeCacheableSignalKeyStore(state.keys, logger),
     },
     logger,
-    printQRInTerminal: true,
+    // QR is delivered to the authenticated dashboard; keep pairing secrets out of logs.
+    printQRInTerminal: false,
     generateHighQualityLinkPreview: false,
   });
 
