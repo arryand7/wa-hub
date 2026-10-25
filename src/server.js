@@ -12,33 +12,30 @@ const io = new Server(server);
 // ─── Socket.IO for real-time QR & status ──────────────────────
 wa.setIO(io);
 
-io.on('connection', (socket) => {
-  // Send current status on connect
+io.on('connection', async (socket) => {
+  // Send current status & account on connect
   socket.emit('wa:status', { status: wa.getStatus() });
+  socket.emit('wa:account', wa.getAccountInfo());
 
-  // If there's a pending QR, send it
-  const QRCode = require('qrcode');
-  const currentQR = wa.getQR();
-  if (currentQR) {
-    QRCode.toDataURL(currentQR, { width: 300, margin: 2 }).then((qrDataUrl) => {
-      socket.emit('wa:qr', { qr: qrDataUrl });
-    });
+  // If there's a pending QR, send it immediately
+  const qrDataUrl = wa.getQRDataUrl();
+  if (qrDataUrl) {
+    socket.emit('wa:qr', { qr: qrDataUrl });
+  }
+});
+
+// ─── Listen for incoming WhatsApp messages ────────────────────
+wa.onMessageUpsert(async ({ messages }) => {
+  for (const msg of messages) {
+    if (msg.key.fromMe) continue; // Skip own messages
+    await commandEngine.handleMessage(msg);
   }
 });
 
 // ─── Start WhatsApp ───────────────────────────────────────────
 async function startWhatsApp() {
   try {
-    const sock = await wa.connectWA();
-
-    // Listen for incoming messages
-    sock.ev.on('messages.upsert', async ({ messages }) => {
-      for (const msg of messages) {
-        if (msg.key.fromMe) continue; // Skip own messages
-        await commandEngine.handleMessage(msg);
-      }
-    });
-
+    await wa.connectWA();
     console.log('📱 WhatsApp client initialized');
   } catch (err) {
     console.error('❌ WhatsApp init error:', err);

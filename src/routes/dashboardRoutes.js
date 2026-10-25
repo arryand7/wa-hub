@@ -21,6 +21,7 @@ router.get('/', async (req, res) => {
     res.render('dashboard/index', {
       title: 'Dashboard',
       waStatus: wa.getStatus(),
+      waAccount: wa.getAccountInfo(),
       stats: { appCount, commandCount, scheduleCount, groupCount },
       recentLogs,
       currentPage: 'dashboard',
@@ -31,6 +32,7 @@ router.get('/', async (req, res) => {
     res.render('dashboard/index', {
       title: 'Dashboard',
       waStatus: 'disconnected',
+      waAccount: null,
       stats: { appCount: 0, commandCount: 0, scheduleCount: 0, groupCount: 0 },
       recentLogs: [],
       currentPage: 'dashboard',

@@ -17,6 +17,7 @@ const scheduleRoutes = require('./routes/scheduleRoutes');
 const logRoutes = require('./routes/logRoutes');
 const apiRoutes = require('./routes/apiRoutes');
 const healthRoutes = require('./routes/healthRoutes');
+const waRoutes = require('./routes/waRoutes');
 
 const app = express();
 
@@ -69,6 +70,7 @@ app.use('/commands', requireAuth, commandRoutes);
 app.use('/groups', requireAuth, groupRoutes);
 app.use('/schedules', requireAuth, scheduleRoutes);
 app.use('/logs', requireAuth, logRoutes);
+app.use('/wa', requireAuth, waRoutes);
 app.use('/api/v1', apiRoutes);
 
 // ─── 404 Handler ──────────────────────────────────────────────
