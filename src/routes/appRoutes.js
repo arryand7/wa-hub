@@ -88,7 +88,8 @@ router.post('/:id/sync-manifest', async (req, res) => {
       return res.redirect('/apps');
     }
 
-    const response = await axios.get(`${app.baseUrl}/api/bot/manifest`, {
+    const manifestBaseUrl = app.baseUrl.trim().replace(/\/+$/, '');
+    const response = await axios.get(`${manifestBaseUrl}/api/bot/manifest`, {
       headers: { 'X-Bot-Secret-Key': app.secretKey },
       timeout: 10000,
     });
