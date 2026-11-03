@@ -64,6 +64,9 @@ app.use((req, res, next) => {
 // ─── Routes ──────────────────────────────────────────────────
 app.use('/healthz', healthRoutes);
 app.use('/auth', authRoutes);
+// Machine API authentication is handled by its own API-key middleware.
+// Mount it before the authenticated dashboard catch-all.
+app.use('/api/v1', apiRoutes);
 app.use('/', requireAuth, dashboardRoutes);
 app.use('/apps', requireAuth, appRoutes);
 app.use('/commands', requireAuth, commandRoutes);
@@ -71,8 +74,6 @@ app.use('/groups', requireAuth, groupRoutes);
 app.use('/schedules', requireAuth, scheduleRoutes);
 app.use('/logs', requireAuth, logRoutes);
 app.use('/wa', requireAuth, waRoutes);
-app.use('/api/v1', apiRoutes);
-
 // ─── 404 Handler ──────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).render('errors/404', { title: '404', currentPage: '' });
