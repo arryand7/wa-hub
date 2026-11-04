@@ -1,0 +1,17 @@
+project: central-wa-hub
+type: node
+deploy:
+  target: ssh
+  path: /home/ryand/wa-hub
+  post_deploy:
+    - npm ci --production
+    - npx prisma generate
+    - npx prisma db push
+    - pm2 restart central-wa-hub
+test:
+  command: npm test
+runtime:
+  manager: pm2
+  entry: src/server.js
+notifications:
+  wa_hub: false  # ini WA hub-nya sendiri
